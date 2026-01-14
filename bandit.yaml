@@ -1,0 +1,39 @@
+# =============================================================================
+# Bandit SAST Configuration
+# =============================================================================
+# Bandit is a tool designed to find common security issues in Python code.
+# This configuration customizes the security scan for our project.
+#
+# Why SAST?
+# - Detects code-level security vulnerabilities early in development
+# - Identifies OWASP Top 10 issues like SQL injection, hardcoded secrets
+# - Shift-left security: find issues in code, not in production
+# =============================================================================
+
+# Directories to skip during scan
+exclude_dirs:
+  - tests
+  - .venv
+  - venv
+  - .git
+  - __pycache__
+  - .pytest_cache
+
+# Tests to skip (if any cause too many false positives)
+skips:
+  # B101: assert_used - We use asserts in development/testing
+  - B101
+
+# Severity levels to report
+# LOW, MEDIUM, HIGH
+severity: LOW
+
+# Confidence levels to report
+# LOW, MEDIUM, HIGH
+confidence: LOW
+
+# Output format options: csv, custom, html, json, screen, txt, xml, yaml
+output_format: screen
+
+# Recursively scan directories
+recursive: true

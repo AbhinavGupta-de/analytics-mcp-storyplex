@@ -45,4 +45,22 @@ ENV/
 .DS_Store
 Thumbs.db
 
+# Testing & Coverage
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+
+# Security scan reports
+bandit-report.json
+pip-audit-report.json
+trivy-results.sarif
+bandit-results.sarif
+
+# Docker artifacts
+image.tar
+
+# Ruff cache
+.ruff_cache/
+
 .assignment/
