@@ -12,11 +12,13 @@ class TestMCPServerImports:
     def test_import_server(self):
         """Test that MCP server module can be imported."""
         import src.mcp_server
+
         assert src.mcp_server.server is not None
 
     def test_import_json_encoder(self):
         """Test custom JSON encoder import."""
         from src.mcp_server import CustomJSONEncoder, json_dumps
+
         assert CustomJSONEncoder is not None
         assert json_dumps is not None
 
@@ -87,8 +89,8 @@ class TestLLMServiceGetter:
         # Reset the cached service
         src.mcp_server._llm_service = None
 
-        with patch('src.config.settings.anthropic_api_key', 'test-key'):
-            with patch('anthropic.Anthropic'):
+        with patch("src.config.settings.anthropic_api_key", "test-key"):
+            with patch("anthropic.Anthropic"):
                 service = get_llm_service()
                 assert service is not None
 
@@ -103,7 +105,7 @@ class TestLLMServiceGetter:
         # Reset the cached service
         src.mcp_server._llm_service = None
 
-        with patch('src.config.settings.anthropic_api_key', None):
+        with patch("src.config.settings.anthropic_api_key", None):
             with pytest.raises(ValueError):
                 get_llm_service()
 

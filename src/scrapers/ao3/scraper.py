@@ -178,7 +178,11 @@ class AO3Scraper(BaseScraper):
             author_link = blurb.select_one("h4.heading a[rel='author']")
             if author_link:
                 author_href = author_link.get("href", "")
-                author_id = author_href.split("/users/")[-1].split("/")[0] if "/users/" in author_href else ""
+                author_id = (
+                    author_href.split("/users/")[-1].split("/")[0]
+                    if "/users/" in author_href
+                    else ""
+                )
                 author = ScrapedAuthor(
                     platform_author_id=author_id,
                     username=author_link.get_text(strip=True),
@@ -339,7 +343,11 @@ class AO3Scraper(BaseScraper):
             author_link = soup.select_one("h3.byline a[rel='author']")
             if author_link:
                 author_href = author_link.get("href", "")
-                author_id = author_href.split("/users/")[-1].split("/")[0] if "/users/" in author_href else ""
+                author_id = (
+                    author_href.split("/users/")[-1].split("/")[0]
+                    if "/users/" in author_href
+                    else ""
+                )
                 author = ScrapedAuthor(
                     platform_author_id=author_id,
                     username=author_link.get_text(strip=True),
@@ -541,10 +549,12 @@ class AO3Scraper(BaseScraper):
         if fandom:
             # Use fandom-specific tag page
             from urllib.parse import quote
+
             fandom_encoded = quote(encode_tag(fandom), safe="")
             base_search_url = f"{self.base_url}/tags/{fandom_encoded}/works"
         elif tag:
             from urllib.parse import quote
+
             tag_encoded = quote(encode_tag(tag), safe="")
             base_search_url = f"{self.base_url}/tags/{tag_encoded}/works"
         else:
@@ -633,11 +643,13 @@ class AO3Scraper(BaseScraper):
                         count_match = re.search(r"\((\d[\d,]*)\)", full_text)
                         work_count = self._parse_number(count_match.group(1)) if count_match else 0
 
-                        fandoms.append({
-                            "name": name,
-                            "work_count": work_count,
-                            "category": category,
-                        })
+                        fandoms.append(
+                            {
+                                "name": name,
+                                "work_count": work_count,
+                                "category": category,
+                            }
+                        )
 
             # Deduplicate by name (keep first occurrence with highest work count)
             seen = {}
@@ -716,10 +728,12 @@ class AO3Scraper(BaseScraper):
                             # Extract name and count from "Tag Name (12345)"
                             match = re.match(r"(.+?)\s*\((\d[\d,]*)\)$", text)
                             if match:
-                                tags.append({
-                                    "name": match.group(1).strip(),
-                                    "count": self._parse_number(match.group(2)),
-                                })
+                                tags.append(
+                                    {
+                                        "name": match.group(1).strip(),
+                                        "count": self._parse_number(match.group(2)),
+                                    }
+                                )
                 return tags
 
             result["ratings"] = parse_tag_section("rating")

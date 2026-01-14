@@ -152,8 +152,7 @@ async def get_top_tags(
         results = query.order_by(func.count(WorkTag.work_id).desc()).limit(limit).all()
 
         return [
-            TagStats(name=r.name, category=r.category, work_count=r.work_count)
-            for r in results
+            TagStats(name=r.name, category=r.category, work_count=r.work_count) for r in results
         ]
 
 
@@ -180,12 +179,8 @@ async def get_engagement_trends(
         )
 
         return {
-            "views": [
-                {"date": str(r.date), "value": r.views or 0} for r in results
-            ],
-            "likes": [
-                {"date": str(r.date), "value": r.likes or 0} for r in results
-            ],
+            "views": [{"date": str(r.date), "value": r.views or 0} for r in results],
+            "likes": [{"date": str(r.date), "value": r.likes or 0} for r in results],
         }
 
 
@@ -206,9 +201,7 @@ async def get_word_count_distribution():
 
         distribution = []
         for min_wc, max_wc, label in ranges:
-            query = session.query(func.count(Work.id)).filter(
-                Work.word_count >= min_wc
-            )
+            query = session.query(func.count(Work.id)).filter(Work.word_count >= min_wc)
             if max_wc != float("inf"):
                 query = query.filter(Work.word_count < max_wc)
             count = query.scalar() or 0

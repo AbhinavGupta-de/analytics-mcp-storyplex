@@ -13,14 +13,16 @@ class TestLLMServiceImports:
     def test_import_llm_service(self):
         """Test that LLMService can be imported."""
         from src.llm import LLMService
+
         assert LLMService is not None
 
     def test_import_config(self):
         """Test that config includes LLM settings."""
         from src.config import settings
-        assert hasattr(settings, 'anthropic_api_key')
-        assert hasattr(settings, 'llm_model')
-        assert hasattr(settings, 'llm_max_tokens')
+
+        assert hasattr(settings, "anthropic_api_key")
+        assert hasattr(settings, "llm_model")
+        assert hasattr(settings, "llm_max_tokens")
 
 
 class TestLLMServiceInitialization:
@@ -31,8 +33,8 @@ class TestLLMServiceInitialization:
         from src.llm import LLMService
 
         # Clear any existing API key
-        with patch.dict(os.environ, {'ANTHROPIC_API_KEY': ''}, clear=False):
-            with patch('src.config.settings.anthropic_api_key', None):
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": ""}, clear=False):
+            with patch("src.config.settings.anthropic_api_key", None):
                 with pytest.raises(ValueError) as exc_info:
                     LLMService()
                 assert "ANTHROPIC_API_KEY" in str(exc_info.value)
@@ -42,7 +44,7 @@ class TestLLMServiceInitialization:
         from src.llm import LLMService
 
         # Provide a test API key
-        with patch('anthropic.Anthropic'):
+        with patch("anthropic.Anthropic"):
             service = LLMService(api_key="test-api-key")
             assert service.api_key == "test-api-key"
 
@@ -53,7 +55,7 @@ class TestLLMServiceMethods:
     @pytest.fixture
     def mock_llm_service(self):
         """Create a mocked LLM service."""
-        with patch('anthropic.Anthropic') as mock_anthropic:
+        with patch("anthropic.Anthropic") as mock_anthropic:
             from src.llm import LLMService
 
             service = LLMService(api_key="test-key")
@@ -66,15 +68,17 @@ class TestLLMServiceMethods:
         # Mock the API response
         mock_response = MagicMock()
         mock_response.content = [MagicMock()]
-        mock_response.content[0].text = json.dumps({
-            "fandom": "Final Fantasy",
-            "source_type": "Video Games",
-            "total_hours": 500,
-            "minimum_hours": 40,
-            "recommendation": "Start with FFX or FFVII",
-            "components": [],
-            "entry_points": ["Final Fantasy VII", "Final Fantasy X"]
-        })
+        mock_response.content[0].text = json.dumps(
+            {
+                "fandom": "Final Fantasy",
+                "source_type": "Video Games",
+                "total_hours": 500,
+                "minimum_hours": 40,
+                "recommendation": "Start with FFX or FFVII",
+                "components": [],
+                "entry_points": ["Final Fantasy VII", "Final Fantasy X"],
+            }
+        )
         service.client.messages.create = MagicMock(return_value=mock_response)
 
         result = service.estimate_fandom_time("Final Fantasy")
@@ -105,17 +109,19 @@ class TestLLMServiceMethods:
 
         mock_response = MagicMock()
         mock_response.content = [MagicMock()]
-        mock_response.content[0].text = json.dumps({
-            "fandom": "Harry Potter",
-            "summary": "Romance-heavy fandom with strong shipping culture",
-            "dominant_themes": ["Romance", "Angst", "AU"],
-            "popular_tropes": ["Enemies to Lovers", "Time Travel"],
-            "shipping_culture": "Very active",
-            "content_warnings": "Mostly teen-rated",
-            "audience_profile": "Young adult readers",
-            "writing_opportunities": ["Underserved side characters"],
-            "market_insights": "High engagement potential"
-        })
+        mock_response.content[0].text = json.dumps(
+            {
+                "fandom": "Harry Potter",
+                "summary": "Romance-heavy fandom with strong shipping culture",
+                "dominant_themes": ["Romance", "Angst", "AU"],
+                "popular_tropes": ["Enemies to Lovers", "Time Travel"],
+                "shipping_culture": "Very active",
+                "content_warnings": "Mostly teen-rated",
+                "audience_profile": "Young adult readers",
+                "writing_opportunities": ["Underserved side characters"],
+                "market_insights": "High engagement potential",
+            }
+        )
         service.client.messages.create = MagicMock(return_value=mock_response)
 
         genre_data = {
@@ -124,7 +130,7 @@ class TestLLMServiceMethods:
             "relationships": [{"name": "Draco/Harry", "count": 70000}],
             "characters": [],
             "ratings": [],
-            "categories": []
+            "categories": [],
         }
 
         result = service.analyze_fandom_genres("Harry Potter", genre_data)
@@ -139,19 +145,21 @@ class TestLLMServiceMethods:
 
         mock_response = MagicMock()
         mock_response.content = [MagicMock()]
-        mock_response.content[0].text = json.dumps({
-            "market_summary": "K-pop and anime dominate",
-            "top_categories": [{"category": "K-pop", "analysis": "Growing fast"}],
-            "growth_opportunities": ["Western TV shows"],
-            "saturation_warnings": ["Harry Potter"],
-            "recommendations": ["Focus on K-pop"],
-            "answer": "Anime fandoms are growing fastest"
-        })
+        mock_response.content[0].text = json.dumps(
+            {
+                "market_summary": "K-pop and anime dominate",
+                "top_categories": [{"category": "K-pop", "analysis": "Growing fast"}],
+                "growth_opportunities": ["Western TV shows"],
+                "saturation_warnings": ["Harry Potter"],
+                "recommendations": ["Focus on K-pop"],
+                "answer": "Anime fandoms are growing fastest",
+            }
+        )
         service.client.messages.create = MagicMock(return_value=mock_response)
 
         fandoms = [
             {"name": "BTS", "work_count": 500000, "category": "K-pop"},
-            {"name": "Marvel", "work_count": 600000, "category": "Movies"}
+            {"name": "Marvel", "work_count": 600000, "category": "Movies"},
         ]
 
         result = service.analyze_market_trends(fandoms, "Which fandoms are growing?")
@@ -179,22 +187,24 @@ class TestLLMServiceMethods:
 
         mock_response = MagicMock()
         mock_response.content = [MagicMock()]
-        mock_response.content[0].text = json.dumps({
-            "fandom": "Final Fantasy",
-            "category": "Video Games",
-            "estimated_works": "100000+",
-            "popularity_tier": "A",
-            "summary": "Long-running JRPG franchise with diverse fanfic",
-            "dominant_genres": ["Romance", "Adventure"],
-            "popular_ships": ["Cloud/Tifa", "Noctis/Prompto"],
-            "top_characters": ["Cloud", "Sephiroth"],
-            "common_tropes": ["Fix-it fics", "Canon divergence"],
-            "audience_profile": "Mixed gender, 18-30",
-            "content_rating_breakdown": "Mostly Teen/Mature",
-            "unique_aspects": "Multi-game crossovers common",
-            "writing_opportunities": ["FFXVI content"],
-            "crossover_potential": ["Kingdom Hearts"]
-        })
+        mock_response.content[0].text = json.dumps(
+            {
+                "fandom": "Final Fantasy",
+                "category": "Video Games",
+                "estimated_works": "100000+",
+                "popularity_tier": "A",
+                "summary": "Long-running JRPG franchise with diverse fanfic",
+                "dominant_genres": ["Romance", "Adventure"],
+                "popular_ships": ["Cloud/Tifa", "Noctis/Prompto"],
+                "top_characters": ["Cloud", "Sephiroth"],
+                "common_tropes": ["Fix-it fics", "Canon divergence"],
+                "audience_profile": "Mixed gender, 18-30",
+                "content_rating_breakdown": "Mostly Teen/Mature",
+                "unique_aspects": "Multi-game crossovers common",
+                "writing_opportunities": ["FFXVI content"],
+                "crossover_potential": ["Kingdom Hearts"],
+            }
+        )
         service.client.messages.create = MagicMock(return_value=mock_response)
 
         result = service.generate_fandom_analysis("Final Fantasy")
@@ -210,17 +220,19 @@ class TestLLMServiceMethods:
 
         mock_response = MagicMock()
         mock_response.content = [MagicMock()]
-        mock_response.content[0].text = json.dumps({
-            "answer": "The top anime fandoms by work count are: 1. My Hero Academia (500K+), 2. Haikyuu!! (400K+), 3. Attack on Titan (350K+)",
-            "data": [
-                {"fandom": "My Hero Academia", "works": 500000},
-                {"fandom": "Haikyuu!!", "works": 400000}
-            ],
-            "insights": ["Anime fandoms dominate AO3", "Sports anime surprisingly popular"],
-            "recommendations": ["Target BnHA for maximum reach"],
-            "confidence": "high",
-            "data_sources": "AO3 fandom statistics"
-        })
+        mock_response.content[0].text = json.dumps(
+            {
+                "answer": "The top anime fandoms by work count are: 1. My Hero Academia (500K+), 2. Haikyuu!! (400K+), 3. Attack on Titan (350K+)",
+                "data": [
+                    {"fandom": "My Hero Academia", "works": 500000},
+                    {"fandom": "Haikyuu!!", "works": 400000},
+                ],
+                "insights": ["Anime fandoms dominate AO3", "Sports anime surprisingly popular"],
+                "recommendations": ["Target BnHA for maximum reach"],
+                "confidence": "high",
+                "data_sources": "AO3 fandom statistics",
+            }
+        )
         service.client.messages.create = MagicMock(return_value=mock_response)
 
         result = service.answer_any_question("What are the top anime fandoms?")

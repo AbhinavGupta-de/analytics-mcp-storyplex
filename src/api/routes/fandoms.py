@@ -120,6 +120,7 @@ async def get_fandom(fandom_id: int):
 
         if not fandom:
             from fastapi import HTTPException
+
             raise HTTPException(status_code=404, detail="Fandom not found")
 
         # Get top works in this fandom
