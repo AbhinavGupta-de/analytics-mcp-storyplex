@@ -161,7 +161,9 @@ class Work(Base):
     # Relationships
     platform: Mapped["Platform"] = relationship(back_populates="works")
     author: Mapped[Optional["Author"]] = relationship(back_populates="works")
-    tags: Mapped[list["WorkTag"]] = relationship(back_populates="work", cascade="all, delete-orphan")
+    tags: Mapped[list["WorkTag"]] = relationship(
+        back_populates="work", cascade="all, delete-orphan"
+    )
     fandoms: Mapped[list["WorkFandom"]] = relationship(
         back_populates="work", cascade="all, delete-orphan"
     )

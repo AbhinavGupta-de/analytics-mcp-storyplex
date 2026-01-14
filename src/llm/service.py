@@ -26,8 +26,7 @@ class LLMService:
         self.api_key = api_key or settings.anthropic_api_key
         if not self.api_key:
             raise ValueError(
-                "Anthropic API key not configured. "
-                "Set ANTHROPIC_API_KEY environment variable."
+                "Anthropic API key not configured. Set ANTHROPIC_API_KEY environment variable."
             )
         self.client = Anthropic(api_key=self.api_key)
         self.model = settings.llm_model
@@ -145,22 +144,22 @@ The JSON must have this structure:
 
         user_prompt = f"""Analyze this genre/tag data for the fandom "{fandom_name}":
 
-Total Works: {genre_data.get('total_works', 'Unknown')}
+Total Works: {genre_data.get("total_works", "Unknown")}
 
 Top Genres/Tags:
-{json.dumps(genre_data.get('genres', [])[:20], indent=2)}
+{json.dumps(genre_data.get("genres", [])[:20], indent=2)}
 
 Top Relationships:
-{json.dumps(genre_data.get('relationships', [])[:15], indent=2)}
+{json.dumps(genre_data.get("relationships", [])[:15], indent=2)}
 
 Top Characters:
-{json.dumps(genre_data.get('characters', [])[:15], indent=2)}
+{json.dumps(genre_data.get("characters", [])[:15], indent=2)}
 
 Ratings Distribution:
-{json.dumps(genre_data.get('ratings', []), indent=2)}
+{json.dumps(genre_data.get("ratings", []), indent=2)}
 
 Categories:
-{json.dumps(genre_data.get('categories', []), indent=2)}
+{json.dumps(genre_data.get("categories", []), indent=2)}
 
 Provide insights about this fandom's fanfiction landscape."""
 
@@ -401,7 +400,11 @@ IMPORTANT: Respond with ONLY valid JSON in this format:
         if db_data:
             context_parts.append(f"Database data:\n{json.dumps(db_data, indent=2)}")
 
-        context = "\n\n".join(context_parts) if context_parts else "No specific data provided - use your knowledge."
+        context = (
+            "\n\n".join(context_parts)
+            if context_parts
+            else "No specific data provided - use your knowledge."
+        )
 
         user_prompt = f"""Question: {question}
 
@@ -424,7 +427,7 @@ knowledge of fanfiction platforms and fandoms to give the best possible answer."
             return {
                 "answer": response if response else "Failed to generate response",
                 "confidence": "low",
-                "data_sources": "LLM knowledge"
+                "data_sources": "LLM knowledge",
             }
         except Exception as e:
             log_llm(f"LLM error: {e}")

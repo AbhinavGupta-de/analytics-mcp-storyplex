@@ -46,9 +46,7 @@ def scrape_ao3(fandom, tag, query, sort, limit, snapshot):
     with AO3Scraper() as scraper:
         with get_session() as session:
             repo = WorkRepository(session)
-            platform = repo.get_or_create_platform(
-                PlatformType.AO3, scraper.base_url
-            )
+            platform = repo.get_or_create_platform(PlatformType.AO3, scraper.base_url)
 
             count = 0
             for scraped_work in scraper.search_works(
@@ -82,9 +80,7 @@ def scrape_ao3_work(work_id, snapshot):
 
         with get_session() as session:
             repo = WorkRepository(session)
-            platform = repo.get_or_create_platform(
-                PlatformType.AO3, scraper.base_url
-            )
+            platform = repo.get_or_create_platform(PlatformType.AO3, scraper.base_url)
 
             work = repo.upsert_work(scraped_work, platform)
             if snapshot:
@@ -183,12 +179,7 @@ def stats_top_works(by, limit):
     }.get(by, Work.latest_views)
 
     with get_session() as session:
-        works = (
-            session.query(Work)
-            .order_by(sort_column.desc())
-            .limit(limit)
-            .all()
-        )
+        works = session.query(Work).order_by(sort_column.desc()).limit(limit).all()
 
         table = Table(title=f"Top {limit} Works by {by.capitalize()}")
         table.add_column("#", style="dim")

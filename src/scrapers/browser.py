@@ -9,7 +9,7 @@ Use this for sites that:
 import asyncio
 from typing import Optional
 
-from playwright.async_api import async_playwright, Browser, Page, BrowserContext
+from playwright.async_api import Browser, BrowserContext, Page, async_playwright
 
 
 class BrowserScraper:

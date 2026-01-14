@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 
 from src.db.models import (
     Author,
-    ContentRating,
     EngagementSnapshot,
     Fandom,
     Platform,
@@ -17,7 +16,6 @@ from src.db.models import (
     Work,
     WorkFandom,
     WorkRelationship,
-    WorkStatus,
     WorkTag,
 )
 
@@ -34,9 +32,7 @@ class WorkRepository:
     def get_or_create_platform(self, platform_type: PlatformType, base_url: str) -> Platform:
         """Get or create a platform record."""
         platform = (
-            self.session.query(Platform)
-            .filter(Platform.platform_type == platform_type)
-            .first()
+            self.session.query(Platform).filter(Platform.platform_type == platform_type).first()
         )
 
         if not platform:
@@ -100,9 +96,7 @@ class WorkRepository:
 
         return author
 
-    def get_or_create_tag(
-        self, name: str, category: Optional[str] = None
-    ) -> Tag:
+    def get_or_create_tag(self, name: str, category: Optional[str] = None) -> Tag:
         """Get or create a tag record."""
         normalized = name.lower().strip()
 
@@ -125,11 +119,7 @@ class WorkRepository:
         """Get or create a fandom record."""
         normalized = name.lower().strip()
 
-        fandom = (
-            self.session.query(Fandom)
-            .filter(Fandom.normalized_name == normalized)
-            .first()
-        )
+        fandom = self.session.query(Fandom).filter(Fandom.normalized_name == normalized).first()
 
         if not fandom:
             fandom = Fandom(
@@ -172,9 +162,7 @@ class WorkRepository:
 
         return rel
 
-    def upsert_work(
-        self, scraped: "ScrapedWork", platform: Platform
-    ) -> Work:
+    def upsert_work(self, scraped: "ScrapedWork", platform: Platform) -> Work:
         """Insert or update a work from scraped data."""
         # Check if work exists
         work = (
@@ -256,9 +244,7 @@ class WorkRepository:
 
     def _sync_work_tags(self, work: Work, tag_names: list[str], category: str) -> None:
         """Sync work tags - add new ones, keep existing."""
-        existing_tags = {
-            wt.tag.normalized_name for wt in work.tags if wt.tag.category == category
-        }
+        existing_tags = {wt.tag.normalized_name for wt in work.tags if wt.tag.category == category}
 
         for i, name in enumerate(tag_names):
             normalized = name.lower().strip()
@@ -275,9 +261,7 @@ class WorkRepository:
             normalized = name.lower().strip()
             if normalized not in existing_fandoms:
                 fandom = self.get_or_create_fandom(name)
-                work_fandom = WorkFandom(
-                    work_id=work.id, fandom_id=fandom.id, is_primary=(i == 0)
-                )
+                work_fandom = WorkFandom(work_id=work.id, fandom_id=fandom.id, is_primary=(i == 0))
                 self.session.add(work_fandom)
 
     def _sync_work_relationships(self, work: Work, relationship_names: list[str]) -> None:

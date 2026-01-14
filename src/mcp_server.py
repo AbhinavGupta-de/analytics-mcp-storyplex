@@ -13,7 +13,6 @@ import sys
 import traceback
 from datetime import datetime
 from decimal import Decimal
-from functools import wraps
 from typing import Any, Callable
 
 
@@ -70,25 +69,24 @@ async def run_with_retry(
                 await asyncio.sleep(retry_delay * (attempt + 1))  # Exponential backoff
     raise last_error
 
-from mcp.server import Server
-from mcp.server.stdio import stdio_server
-from mcp.types import Tool, TextContent
-from sqlalchemy import func
 
-from src.config import settings
-from src.db.connection import get_session
-from src.db.models import (
+from mcp.server import Server  # noqa: E402
+from mcp.server.stdio import stdio_server  # noqa: E402
+from mcp.types import TextContent, Tool  # noqa: E402
+from sqlalchemy import func  # noqa: E402
+
+from src.db.connection import get_session  # noqa: E402
+from src.db.models import (  # noqa: E402
     Author,
     Fandom,
-    Platform,
     PlatformType,
     Tag,
     Work,
     WorkFandom,
     WorkTag,
 )
-from src.db.repository import WorkRepository
-from src.scrapers.ao3 import AO3Scraper
+from src.db.repository import WorkRepository  # noqa: E402
+from src.scrapers.ao3 import AO3Scraper  # noqa: E402
 
 # Create the MCP server
 server = Server("storyplex-analytics")
@@ -102,6 +100,7 @@ def get_llm_service():
     global _llm_service
     if _llm_service is None:
         from src.llm import LLMService
+
         _llm_service = LLMService()
     return _llm_service
 
@@ -384,16 +383,18 @@ async def _handle_tool(name: str, arguments: dict[str, Any]) -> list[TextContent
             results = []
             for w in works:
                 fandoms = [wf.fandom.name for wf in w.fandoms]
-                results.append({
-                    "id": w.id,
-                    "title": w.title,
-                    "author": w.author.username if w.author else None,
-                    "fandoms": fandoms,
-                    "word_count": w.word_count,
-                    "views": w.latest_views,
-                    "likes": w.latest_likes,
-                    "url": w.url,
-                })
+                results.append(
+                    {
+                        "id": w.id,
+                        "title": w.title,
+                        "author": w.author.username if w.author else None,
+                        "fandoms": fandoms,
+                        "word_count": w.word_count,
+                        "views": w.latest_views,
+                        "likes": w.latest_likes,
+                        "url": w.url,
+                    }
+                )
 
         return [TextContent(type="text", text=json_dumps(results, indent=2))]
 
@@ -512,7 +513,9 @@ async def _handle_tool(name: str, arguments: dict[str, Any]) -> list[TextContent
 
                     if not fandoms:
                         log_error("No fandoms returned from scraper")
-                        raise ValueError("Failed to fetch fandoms from AO3 - page may have changed or blocked")
+                        raise ValueError(
+                            "Failed to fetch fandoms from AO3 - page may have changed or blocked"
+                        )
 
                     with get_session() as session:
                         repo = WorkRepository(session)
@@ -537,10 +540,12 @@ async def _handle_tool(name: str, arguments: dict[str, Any]) -> list[TextContent
         # Format response with top fandoms preview
         top_5 = fandoms[:5]
         preview = "\n".join([f"  - {f['name']}: {f['work_count']:,} works" for f in top_5])
-        return [TextContent(
-            type="text",
-            text=f"Successfully scraped {len(fandoms)} fandoms from AO3.\n\nTop 5:\n{preview}"
-        )]
+        return [
+            TextContent(
+                type="text",
+                text=f"Successfully scraped {len(fandoms)} fandoms from AO3.\n\nTop 5:\n{preview}",
+            )
+        ]
 
     elif name == "analyze_fandom":
         fandom_name = arguments["fandom_name"]
@@ -589,7 +594,7 @@ async def _handle_tool(name: str, arguments: dict[str, Any]) -> list[TextContent
                             for w in top_works
                         ],
                         "top_tags": [{"tag": t[0], "count": t[1]} for t in top_tags],
-                        "source": "database"
+                        "source": "database",
                     }
 
         # If no DB data, try to scrape genre stats from AO3
@@ -599,9 +604,11 @@ async def _handle_tool(name: str, arguments: dict[str, Any]) -> list[TextContent
             # Use LLM to find correct AO3 name
             ao3_name = fandom_name
             try:
+
                 def _find_name():
                     llm = get_llm_service()
                     return llm.find_ao3_fandom_name(fandom_name)
+
                 ao3_name = await asyncio.to_thread(_find_name)
             except Exception:
                 pass
@@ -621,7 +628,7 @@ async def _handle_tool(name: str, arguments: dict[str, Any]) -> list[TextContent
                         "top_genres": scraped_data.get("genres", [])[:10],
                         "top_relationships": scraped_data.get("relationships", [])[:10],
                         "ratings": scraped_data.get("ratings", []),
-                        "source": "AO3 live scrape"
+                        "source": "AO3 live scrape",
                     }
             except Exception as e:
                 log_error(f"Scrape failed: {e}")
@@ -645,7 +652,11 @@ async def _handle_tool(name: str, arguments: dict[str, Any]) -> list[TextContent
                 db_result["source"] = "LLM knowledge"
 
         if "error" in db_result:
-            return [TextContent(type="text", text=f"Could not analyze '{fandom_name}': {db_result['error']}")]
+            return [
+                TextContent(
+                    type="text", text=f"Could not analyze '{fandom_name}': {db_result['error']}"
+                )
+            ]
 
         return [TextContent(type="text", text=json_dumps(db_result, indent=2))]
 
@@ -656,9 +667,11 @@ async def _handle_tool(name: str, arguments: dict[str, Any]) -> list[TextContent
         # First, try to find the correct AO3 fandom name using LLM
         ao3_fandom_name = fandom_name
         try:
+
             def _find_name():
                 llm = get_llm_service()
                 return llm.find_ao3_fandom_name(fandom_name)
+
             ao3_fandom_name = await asyncio.to_thread(_find_name)
             log_info(f"Mapped '{fandom_name}' -> '{ao3_fandom_name}'")
         except Exception as e:
@@ -670,9 +683,9 @@ async def _handle_tool(name: str, arguments: dict[str, Any]) -> list[TextContent
             names_to_try.append(fandom_name)
 
         stats = None
-        last_error = None
 
         for name_attempt in names_to_try:
+
             def _get_fandom_genres(name=name_attempt):
                 with AO3Scraper() as scraper:
                     return scraper.get_fandom_tag_stats(name)
@@ -688,7 +701,6 @@ async def _handle_tool(name: str, arguments: dict[str, Any]) -> list[TextContent
                     break  # Success!
                 stats = None
             except Exception as e:
-                last_error = e
                 log_error(f"Failed with name '{name_attempt}': {e}")
 
         # If scraping failed, fall back to LLM-generated analysis
@@ -707,10 +719,12 @@ async def _handle_tool(name: str, arguments: dict[str, Any]) -> list[TextContent
             result = await asyncio.to_thread(_generate_analysis)
 
             if "error" in result:
-                return [TextContent(
-                    type="text",
-                    text=f"Could not scrape or analyze '{fandom_name}': {result['error']}"
-                )]
+                return [
+                    TextContent(
+                        type="text",
+                        text=f"Could not scrape or analyze '{fandom_name}': {result['error']}",
+                    )
+                ]
 
             result["source"] = "LLM knowledge (scraping failed)"
             return [TextContent(type="text", text=json_dumps(result, indent=2))]
@@ -724,7 +738,7 @@ async def _handle_tool(name: str, arguments: dict[str, Any]) -> list[TextContent
             "top_characters": stats["characters"][:limit],
             "ratings": stats["ratings"],
             "categories": stats["categories"],
-            "source": "AO3 scraped data"
+            "source": "AO3 scraped data",
         }
 
         return [TextContent(type="text", text=json_dumps(result, indent=2))]
@@ -768,10 +782,12 @@ async def _handle_tool(name: str, arguments: dict[str, Any]) -> list[TextContent
                 operation="get_fandom_genres",
             )
         except Exception as e:
-            return [TextContent(
-                type="text",
-                text=f"Error fetching genre data for '{fandom_name}': {str(e)}\n\nTip: Use the exact fandom name as it appears on AO3."
-            )]
+            return [
+                TextContent(
+                    type="text",
+                    text=f"Error fetching genre data for '{fandom_name}': {str(e)}\n\nTip: Use the exact fandom name as it appears on AO3.",
+                )
+            ]
 
         if "error" in genre_data:
             return [TextContent(type="text", text=f"Error: {genre_data['error']}")]
@@ -843,7 +859,11 @@ async def _handle_tool(name: str, arguments: dict[str, Any]) -> list[TextContent
             return [TextContent(type="text", text=f"Error fetching fandom data: {e}")]
 
         if not fandoms:
-            return [TextContent(type="text", text="No fandom data available. Run scrape_ao3_fandoms first.")]
+            return [
+                TextContent(
+                    type="text", text="No fandom data available. Run scrape_ao3_fandoms first."
+                )
+            ]
 
         # Analyze with LLM
         def _analyze():
@@ -885,7 +905,11 @@ async def _handle_tool(name: str, arguments: dict[str, Any]) -> list[TextContent
                 )
                 if top_fandoms:
                     db_data["top_fandoms"] = [
-                        {"name": f.name, "work_count": f.estimated_work_count, "category": f.category}
+                        {
+                            "name": f.name,
+                            "work_count": f.estimated_work_count,
+                            "category": f.category,
+                        }
                         for f in top_fandoms
                     ]
         except Exception as e:
@@ -895,6 +919,7 @@ async def _handle_tool(name: str, arguments: dict[str, Any]) -> list[TextContent
         question_lower = question.lower()
         if any(kw in question_lower for kw in ["anime", "fandom", "top", "popular", "trending"]):
             try:
+
                 def _scrape_fandoms():
                     with AO3Scraper() as scraper:
                         return scraper.get_top_fandoms(limit=30)
@@ -914,7 +939,7 @@ async def _handle_tool(name: str, arguments: dict[str, Any]) -> list[TextContent
                 # LLM not configured - still try to answer using basic knowledge
                 return {
                     "error": str(e),
-                    "suggestion": "Configure ANTHROPIC_API_KEY for full AI-powered answers"
+                    "suggestion": "Configure ANTHROPIC_API_KEY for full AI-powered answers",
                 }
             except Exception as e:
                 log_error(f"LLM error: {e}")
@@ -938,4 +963,5 @@ async def main():
 
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(main())

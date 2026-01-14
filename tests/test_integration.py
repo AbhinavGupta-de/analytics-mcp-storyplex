@@ -7,14 +7,13 @@ These tests require:
 """
 
 import os
-import pytest
-from unittest.mock import patch
 
+import pytest
 
 # Skip all integration tests if not explicitly enabled
 pytestmark = pytest.mark.skipif(
     os.environ.get("RUN_INTEGRATION_TESTS") != "1",
-    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to run."
+    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to run.",
 )
 
 
@@ -61,10 +60,7 @@ class TestScraperIntegration:
 class TestLLMIntegration:
     """Integration tests for LLM-powered features."""
 
-    @pytest.mark.skipif(
-        not os.environ.get("ANTHROPIC_API_KEY"),
-        reason="ANTHROPIC_API_KEY not set"
-    )
+    @pytest.mark.skipif(not os.environ.get("ANTHROPIC_API_KEY"), reason="ANTHROPIC_API_KEY not set")
     @pytest.mark.slow
     def test_estimate_fandom_time(self):
         """Test LLM-powered fandom time estimation."""
@@ -79,10 +75,7 @@ class TestLLMIntegration:
         assert "recommendation" in result
         assert isinstance(result["total_hours"], (int, float))
 
-    @pytest.mark.skipif(
-        not os.environ.get("ANTHROPIC_API_KEY"),
-        reason="ANTHROPIC_API_KEY not set"
-    )
+    @pytest.mark.skipif(not os.environ.get("ANTHROPIC_API_KEY"), reason="ANTHROPIC_API_KEY not set")
     @pytest.mark.slow
     def test_analyze_fandom_genres(self):
         """Test LLM-powered genre analysis."""
@@ -120,10 +113,7 @@ class TestLLMIntegration:
 class TestDatabaseIntegration:
     """Integration tests for database operations."""
 
-    @pytest.mark.skipif(
-        not os.environ.get("DATABASE_URL"),
-        reason="DATABASE_URL not set"
-    )
+    @pytest.mark.skipif(not os.environ.get("DATABASE_URL"), reason="DATABASE_URL not set")
     def test_database_connection(self):
         """Test database connection works."""
         from src.db.connection import get_session
@@ -133,32 +123,24 @@ class TestDatabaseIntegration:
             result = session.execute("SELECT 1").scalar()
             assert result == 1
 
-    @pytest.mark.skipif(
-        not os.environ.get("DATABASE_URL"),
-        reason="DATABASE_URL not set"
-    )
+    @pytest.mark.skipif(not os.environ.get("DATABASE_URL"), reason="DATABASE_URL not set")
     def test_repository_operations(self):
         """Test repository get_or_create operations."""
         from src.db.connection import get_session
-        from src.db.repository import WorkRepository
         from src.db.models import PlatformType
+        from src.db.repository import WorkRepository
 
         with get_session() as session:
             repo = WorkRepository(session)
 
             # Test platform creation
-            platform = repo.get_or_create_platform(
-                PlatformType.AO3,
-                "https://archiveofourown.org"
-            )
+            platform = repo.get_or_create_platform(PlatformType.AO3, "https://archiveofourown.org")
             assert platform.id is not None
             assert platform.platform_type == PlatformType.AO3
 
             # Test fandom creation
             fandom = repo.get_or_create_fandom(
-                "Test Fandom",
-                category="Test",
-                estimated_work_count=1000
+                "Test Fandom", category="Test", estimated_work_count=1000
             )
             assert fandom.id is not None
             assert fandom.name == "Test Fandom"

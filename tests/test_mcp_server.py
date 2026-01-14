@@ -1,7 +1,7 @@
 """Tests for the MCP server."""
 
 import json
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 
@@ -12,11 +12,13 @@ class TestMCPServerImports:
     def test_import_server(self):
         """Test that MCP server module can be imported."""
         import src.mcp_server
+
         assert src.mcp_server.server is not None
 
     def test_import_json_encoder(self):
         """Test custom JSON encoder import."""
         from src.mcp_server import CustomJSONEncoder, json_dumps
+
         assert CustomJSONEncoder is not None
         assert json_dumps is not None
 
@@ -27,6 +29,7 @@ class TestCustomJSONEncoder:
     def test_encode_decimal(self):
         """Test encoding Decimal values."""
         from decimal import Decimal
+
         from src.mcp_server import json_dumps
 
         result = json_dumps({"value": Decimal("123.45")})
@@ -36,6 +39,7 @@ class TestCustomJSONEncoder:
     def test_encode_decimal_integer(self):
         """Test encoding integer Decimal values."""
         from decimal import Decimal
+
         from src.mcp_server import json_dumps
 
         result = json_dumps({"value": Decimal("100")})
@@ -45,6 +49,7 @@ class TestCustomJSONEncoder:
     def test_encode_datetime(self):
         """Test encoding datetime values."""
         from datetime import datetime
+
         from src.mcp_server import json_dumps
 
         dt = datetime(2024, 1, 15, 10, 30, 0)
@@ -78,14 +83,14 @@ class TestLLMServiceGetter:
 
     def test_get_llm_service_with_api_key(self):
         """Test getting LLM service when API key is configured."""
-        from src.mcp_server import get_llm_service
         import src.mcp_server
+        from src.mcp_server import get_llm_service
 
         # Reset the cached service
         src.mcp_server._llm_service = None
 
-        with patch('src.config.settings.anthropic_api_key', 'test-key'):
-            with patch('anthropic.Anthropic'):
+        with patch("src.config.settings.anthropic_api_key", "test-key"):
+            with patch("anthropic.Anthropic"):
                 service = get_llm_service()
                 assert service is not None
 
@@ -94,13 +99,13 @@ class TestLLMServiceGetter:
 
     def test_get_llm_service_without_api_key(self):
         """Test getting LLM service when API key is not configured."""
-        from src.mcp_server import get_llm_service
         import src.mcp_server
+        from src.mcp_server import get_llm_service
 
         # Reset the cached service
         src.mcp_server._llm_service = None
 
-        with patch('src.config.settings.anthropic_api_key', None):
+        with patch("src.config.settings.anthropic_api_key", None):
             with pytest.raises(ValueError):
                 get_llm_service()
 

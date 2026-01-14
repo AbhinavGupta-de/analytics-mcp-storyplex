@@ -127,9 +127,7 @@ def run_scrape_job(job_id: str, request: ScrapeJobRequest):
 
                     with get_session() as session:
                         repo = WorkRepository(session)
-                        platform = repo.get_or_create_platform(
-                            PlatformType.AO3, scraper.base_url
-                        )
+                        platform = repo.get_or_create_platform(PlatformType.AO3, scraper.base_url)
 
                         for scraped_work in scraper.search_works(
                             query=request.query,

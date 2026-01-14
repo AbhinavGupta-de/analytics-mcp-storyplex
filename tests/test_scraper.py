@@ -1,7 +1,6 @@
 """Tests for the AO3 scraper."""
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 
 class TestAO3ScraperImports:
@@ -10,11 +9,13 @@ class TestAO3ScraperImports:
     def test_import_scraper(self):
         """Test that AO3Scraper can be imported."""
         from src.scrapers.ao3 import AO3Scraper
+
         assert AO3Scraper is not None
 
     def test_import_base_classes(self):
         """Test that base classes can be imported."""
-        from src.scrapers.base import BaseScraper, ScrapedWork, ScrapedAuthor
+        from src.scrapers.base import BaseScraper, ScrapedAuthor, ScrapedWork
+
         assert BaseScraper is not None
         assert ScrapedWork is not None
         assert ScrapedAuthor is not None
@@ -25,11 +26,11 @@ class TestAO3ScraperProperties:
 
     def test_platform_type(self):
         """Test platform type is correct."""
-        from src.scrapers.ao3 import AO3Scraper
         from src.db.models import PlatformType
+        from src.scrapers.ao3 import AO3Scraper
 
         # Mock playwright to avoid browser initialization
-        with patch('src.scrapers.ao3.scraper.sync_playwright'):
+        with patch("src.scrapers.ao3.scraper.sync_playwright"):
             scraper = AO3Scraper.__new__(AO3Scraper)
             scraper._client = MagicMock()
             assert scraper.platform_type == PlatformType.AO3
@@ -38,7 +39,7 @@ class TestAO3ScraperProperties:
         """Test base URL is correct."""
         from src.scrapers.ao3 import AO3Scraper
 
-        with patch('src.scrapers.ao3.scraper.sync_playwright'):
+        with patch("src.scrapers.ao3.scraper.sync_playwright"):
             scraper = AO3Scraper.__new__(AO3Scraper)
             scraper._client = MagicMock()
             assert scraper.base_url == "https://archiveofourown.org"
@@ -51,7 +52,7 @@ class TestAO3ScraperParsing:
         """Test number parsing."""
         from src.scrapers.ao3 import AO3Scraper
 
-        with patch('src.scrapers.ao3.scraper.sync_playwright'):
+        with patch("src.scrapers.ao3.scraper.sync_playwright"):
             scraper = AO3Scraper.__new__(AO3Scraper)
             scraper._client = MagicMock()
 
@@ -63,10 +64,11 @@ class TestAO3ScraperParsing:
 
     def test_parse_date(self):
         """Test date parsing."""
-        from src.scrapers.ao3 import AO3Scraper
         from datetime import datetime
 
-        with patch('src.scrapers.ao3.scraper.sync_playwright'):
+        from src.scrapers.ao3 import AO3Scraper
+
+        with patch("src.scrapers.ao3.scraper.sync_playwright"):
             scraper = AO3Scraper.__new__(AO3Scraper)
             scraper._client = MagicMock()
 
@@ -79,10 +81,10 @@ class TestAO3ScraperParsing:
 
     def test_map_rating(self):
         """Test rating mapping."""
-        from src.scrapers.ao3 import AO3Scraper
         from src.db.models import ContentRating
+        from src.scrapers.ao3 import AO3Scraper
 
-        with patch('src.scrapers.ao3.scraper.sync_playwright'):
+        with patch("src.scrapers.ao3.scraper.sync_playwright"):
             scraper = AO3Scraper.__new__(AO3Scraper)
             scraper._client = MagicMock()
 
@@ -94,10 +96,10 @@ class TestAO3ScraperParsing:
 
     def test_map_status(self):
         """Test status mapping."""
-        from src.scrapers.ao3 import AO3Scraper
         from src.db.models import WorkStatus
+        from src.scrapers.ao3 import AO3Scraper
 
-        with patch('src.scrapers.ao3.scraper.sync_playwright'):
+        with patch("src.scrapers.ao3.scraper.sync_playwright"):
             scraper = AO3Scraper.__new__(AO3Scraper)
             scraper._client = MagicMock()
 
@@ -111,13 +113,11 @@ class TestScrapedWorkDataclass:
 
     def test_scraped_work_defaults(self):
         """Test ScrapedWork default values."""
-        from src.scrapers.base import ScrapedWork
         from src.db.models import ContentRating, WorkStatus
+        from src.scrapers.base import ScrapedWork
 
         work = ScrapedWork(
-            platform_work_id="123",
-            title="Test Work",
-            url="https://example.com/work/123"
+            platform_work_id="123", title="Test Work", url="https://example.com/work/123"
         )
 
         assert work.platform_work_id == "123"
@@ -139,9 +139,7 @@ class TestScrapedAuthorDataclass:
         from src.scrapers.base import ScrapedAuthor
 
         author = ScrapedAuthor(
-            platform_author_id="user123",
-            username="testuser",
-            display_name="Test User"
+            platform_author_id="user123", username="testuser", display_name="Test User"
         )
 
         assert author.platform_author_id == "user123"

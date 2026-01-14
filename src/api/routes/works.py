@@ -4,7 +4,6 @@ from typing import Optional
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
-from sqlalchemy import func
 
 from src.db.connection import get_session
 from src.db.models import Author, Fandom, Platform, Work, WorkFandom
@@ -84,19 +83,17 @@ async def list_works(
 ):
     """List works with pagination and filtering."""
     with get_session() as session:
-        query = (
-            session.query(Work)
-            .outerjoin(Author)
-            .outerjoin(Platform)
-        )
+        query = session.query(Work).outerjoin(Author).outerjoin(Platform)
 
         # Apply filters
         if platform:
             query = query.filter(Platform.name.ilike(f"%{platform}%"))
 
         if fandom:
-            query = query.join(WorkFandom).join(Fandom).filter(
-                Fandom.normalized_name.ilike(f"%{fandom.lower()}%")
+            query = (
+                query.join(WorkFandom)
+                .join(Fandom)
+                .filter(Fandom.normalized_name.ilike(f"%{fandom.lower()}%"))
             )
 
         if search:
@@ -170,6 +167,7 @@ async def get_work(work_id: int):
 
         if not work:
             from fastapi import HTTPException
+
             raise HTTPException(status_code=404, detail="Work not found")
 
         fandom_names = [wf.fandom.name for wf in work.fandoms]
