@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "storyplex-analytics": {
+      "command": "python3",
+      "args": ["-m", "src.mcp_server"],
+      "cwd": "/Users/emergent/Documents/Abhinav/Code/abhinav-personal/storyplex-analytics",
+      "env": {
+        "DATABASE_URL": "postgresql://storyplex:storyplex_dev@localhost:5432/storyplex",
+        "ANTHROPIC_API_KEY": "YOUR_API_KEY_HERE"
+      }
+    }
+  }
+}
