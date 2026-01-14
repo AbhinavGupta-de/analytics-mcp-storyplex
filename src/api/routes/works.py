@@ -4,7 +4,6 @@ from typing import Optional
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
-from sqlalchemy import func
 
 from src.db.connection import get_session
 from src.db.models import Author, Fandom, Platform, Work, WorkFandom

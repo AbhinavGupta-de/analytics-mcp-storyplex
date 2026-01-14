@@ -7,9 +7,8 @@ These tests require:
 """
 
 import os
-import pytest
-from unittest.mock import patch
 
+import pytest
 
 # Skip all integration tests if not explicitly enabled
 pytestmark = pytest.mark.skipif(
@@ -140,8 +139,8 @@ class TestDatabaseIntegration:
     def test_repository_operations(self):
         """Test repository get_or_create operations."""
         from src.db.connection import get_session
-        from src.db.repository import WorkRepository
         from src.db.models import PlatformType
+        from src.db.repository import WorkRepository
 
         with get_session() as session:
             repo = WorkRepository(session)

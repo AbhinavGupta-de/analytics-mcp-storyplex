@@ -13,7 +13,6 @@ import sys
 import traceback
 from datetime import datetime
 from decimal import Decimal
-from functools import wraps
 from typing import Any, Callable
 
 
@@ -70,25 +69,23 @@ async def run_with_retry(
                 await asyncio.sleep(retry_delay * (attempt + 1))  # Exponential backoff
     raise last_error
 
-from mcp.server import Server
-from mcp.server.stdio import stdio_server
-from mcp.types import Tool, TextContent
-from sqlalchemy import func
+from mcp.server import Server  # noqa: E402
+from mcp.server.stdio import stdio_server  # noqa: E402
+from mcp.types import TextContent, Tool  # noqa: E402
+from sqlalchemy import func  # noqa: E402
 
-from src.config import settings
-from src.db.connection import get_session
-from src.db.models import (
+from src.db.connection import get_session  # noqa: E402
+from src.db.models import (  # noqa: E402
     Author,
     Fandom,
-    Platform,
     PlatformType,
     Tag,
     Work,
     WorkFandom,
     WorkTag,
 )
-from src.db.repository import WorkRepository
-from src.scrapers.ao3 import AO3Scraper
+from src.db.repository import WorkRepository  # noqa: E402
+from src.scrapers.ao3 import AO3Scraper  # noqa: E402
 
 # Create the MCP server
 server = Server("storyplex-analytics")
@@ -670,7 +667,6 @@ async def _handle_tool(name: str, arguments: dict[str, Any]) -> list[TextContent
             names_to_try.append(fandom_name)
 
         stats = None
-        last_error = None
 
         for name_attempt in names_to_try:
             def _get_fandom_genres(name=name_attempt):
@@ -688,7 +684,6 @@ async def _handle_tool(name: str, arguments: dict[str, Any]) -> list[TextContent
                     break  # Success!
                 stats = None
             except Exception as e:
-                last_error = e
                 log_error(f"Failed with name '{name_attempt}': {e}")
 
         # If scraping failed, fall back to LLM-generated analysis

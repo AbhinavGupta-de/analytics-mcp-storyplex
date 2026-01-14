@@ -1,7 +1,6 @@
 """Tests for the AO3 scraper."""
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 
 class TestAO3ScraperImports:
@@ -14,7 +13,7 @@ class TestAO3ScraperImports:
 
     def test_import_base_classes(self):
         """Test that base classes can be imported."""
-        from src.scrapers.base import BaseScraper, ScrapedWork, ScrapedAuthor
+        from src.scrapers.base import BaseScraper, ScrapedAuthor, ScrapedWork
         assert BaseScraper is not None
         assert ScrapedWork is not None
         assert ScrapedAuthor is not None
@@ -25,8 +24,8 @@ class TestAO3ScraperProperties:
 
     def test_platform_type(self):
         """Test platform type is correct."""
-        from src.scrapers.ao3 import AO3Scraper
         from src.db.models import PlatformType
+        from src.scrapers.ao3 import AO3Scraper
 
         # Mock playwright to avoid browser initialization
         with patch('src.scrapers.ao3.scraper.sync_playwright'):
@@ -63,8 +62,9 @@ class TestAO3ScraperParsing:
 
     def test_parse_date(self):
         """Test date parsing."""
-        from src.scrapers.ao3 import AO3Scraper
         from datetime import datetime
+
+        from src.scrapers.ao3 import AO3Scraper
 
         with patch('src.scrapers.ao3.scraper.sync_playwright'):
             scraper = AO3Scraper.__new__(AO3Scraper)
@@ -79,8 +79,8 @@ class TestAO3ScraperParsing:
 
     def test_map_rating(self):
         """Test rating mapping."""
-        from src.scrapers.ao3 import AO3Scraper
         from src.db.models import ContentRating
+        from src.scrapers.ao3 import AO3Scraper
 
         with patch('src.scrapers.ao3.scraper.sync_playwright'):
             scraper = AO3Scraper.__new__(AO3Scraper)
@@ -94,8 +94,8 @@ class TestAO3ScraperParsing:
 
     def test_map_status(self):
         """Test status mapping."""
-        from src.scrapers.ao3 import AO3Scraper
         from src.db.models import WorkStatus
+        from src.scrapers.ao3 import AO3Scraper
 
         with patch('src.scrapers.ao3.scraper.sync_playwright'):
             scraper = AO3Scraper.__new__(AO3Scraper)
@@ -111,8 +111,8 @@ class TestScrapedWorkDataclass:
 
     def test_scraped_work_defaults(self):
         """Test ScrapedWork default values."""
-        from src.scrapers.base import ScrapedWork
         from src.db.models import ContentRating, WorkStatus
+        from src.scrapers.base import ScrapedWork
 
         work = ScrapedWork(
             platform_work_id="123",

@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 
 from src.db.models import (
     Author,
-    ContentRating,
     EngagementSnapshot,
     Fandom,
     Platform,
@@ -17,7 +16,6 @@ from src.db.models import (
     Work,
     WorkFandom,
     WorkRelationship,
-    WorkStatus,
     WorkTag,
 )
 

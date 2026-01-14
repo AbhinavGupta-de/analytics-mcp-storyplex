@@ -13,7 +13,7 @@ from typing import Iterator, Optional
 from urllib.parse import urlencode, urljoin
 
 from bs4 import BeautifulSoup, Tag
-from playwright.sync_api import sync_playwright, Browser, Page, BrowserContext
+from playwright.sync_api import Browser, BrowserContext, sync_playwright
 
 from src.config import settings
 from src.db.models import ContentRating, PlatformType, WorkStatus
