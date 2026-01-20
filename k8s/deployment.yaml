@@ -1,0 +1,29 @@
+# Storyplex Analytics - Kubernetes Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storyplex-api
+  labels:
+    app: storyplex-analytics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: storyplex-analytics
+  template:
+    metadata:
+      labels:
+        app: storyplex-analytics
+    spec:
+      containers:
+        - name: api
+          image: DOCKERHUB_USERNAME/storyplex-analytics:latest
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
