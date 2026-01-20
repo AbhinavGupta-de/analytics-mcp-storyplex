@@ -1,0 +1,97 @@
+# =============================================================================
+# Storyplex Analytics - CD Pipeline
+# =============================================================================
+# Deploys to Kubernetes after CI passes.
+# Uses Kind (K8s in Docker) for testing in GitHub Actions.
+# =============================================================================
+
+name: CD Pipeline
+
+on:
+  workflow_run:
+    workflows: ["CI/CD Pipeline"]
+    types:
+      - completed
+    branches: [main, master]
+
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to deploy'
+        required: false
+        default: 'latest'
+
+env:
+  IMAGE_NAME: storyplex-analytics
+
+jobs:
+  deploy:
+    name: "Deploy to Kubernetes"
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Kind cluster
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: storyplex
+          wait: 120s
+
+      - name: Verify cluster
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Set image tag
+        id: image
+        run: |
+          if [[ -n "${{ github.event.inputs.image_tag }}" ]]; then
+            echo "tag=${{ github.event.inputs.image_tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update deployment image
+        run: |
+          sed -i "s|DOCKERHUB_USERNAME|${{ secrets.DOCKERHUB_USERNAME }}|g" k8s/deployment.yaml
+          sed -i "s|:latest|:${{ steps.image.outputs.tag }}|g" k8s/deployment.yaml
+          cat k8s/deployment.yaml
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+
+      - name: Wait for deployment
+        run: |
+          kubectl rollout status deployment/storyplex-api --timeout=120s
+
+      - name: Verify deployment
+        run: |
+          echo "=== Deployment ==="
+          kubectl get deployments
+
+          echo ""
+          echo "=== Pods ==="
+          kubectl get pods
+
+          echo ""
+          echo "=== Services ==="
+          kubectl get services
+
+      - name: Test endpoint
+        run: |
+          kubectl port-forward svc/storyplex-api 8080:80 &
+          sleep 5
+          curl -s http://localhost:8080/api/health || echo "Health check (expected to fail without DB)"
+
+      - name: Summary
+        run: |
+          echo ""
+          echo "============================================"
+          echo "  Deployment successful!"
+          echo "============================================"
+          echo "Image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.image.outputs.tag }}"

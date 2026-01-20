@@ -98,6 +98,12 @@ This project implements a production-grade CI/CD pipeline using GitHub Actions w
                                         │ Docker Push │
                                         │ (DockerHub) │
                                         └─────────────┘
+                                               │
+                                               ▼
+                                        ┌─────────────┐
+                                        │  CD Deploy  │
+                                        │ (Kubernetes)│
+                                        └─────────────┘
 ```
 
 ### CI/CD Stages Explained
@@ -113,6 +119,44 @@ This project implements a production-grade CI/CD pipeline using GitHub Actions w
 | **Image Scan** | Trivy | Container vulnerability scan | Prevents vulnerable images from shipping |
 | **Runtime Test** | Docker | Smoke test container | Validates container is runnable |
 | **Docker Push** | DockerHub | Publish trusted image | Enables downstream CD |
+| **CD Deploy** | Kubernetes | Deploy to cluster | Delivers application to production |
+
+## CD Pipeline (Continuous Deployment)
+
+After CI completes successfully, the CD pipeline automatically deploys to Kubernetes.
+
+### CD Architecture
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│  CI Passes   │────▶│ Docker Push  │────▶│  CD Trigger  │────▶│   K8s        │
+│              │     │  :sha-xxx    │     │              │     │  Deployment  │
+└──────────────┘     └──────────────┘     └──────────────┘     └──────────────┘
+```
+
+### Deployment Options
+
+| Option | Description | Use Case |
+|--------|-------------|----------|
+| **Kind (in-workflow)** | Ephemeral K8s cluster in GitHub Actions | Testing, demos, assignments |
+| **Cloud Cluster** | Deploy to Civo, GKE, EKS, etc. | Production deployments |
+
+### Kubernetes Manifests
+
+Located in `k8s/` directory:
+
+| File | Purpose |
+|------|---------|
+| `deployment.yaml` | Pod deployment specification |
+| `service.yaml` | NodePort service for access |
+
+### Running CD Manually
+
+You can trigger the CD pipeline manually from GitHub Actions:
+
+1. Go to **Actions** → **CD Pipeline**
+2. Click **Run workflow**
+3. Optionally specify an image tag (defaults to `latest`)
 
 ### Security Integration (DevSecOps)
 
@@ -173,7 +217,11 @@ make docker-test    # Smoke test
 storyplex-analytics/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml          # CI/CD pipeline definition
+│       ├── ci.yml          # CI pipeline (build, test, scan, push)
+│       └── cd.yml          # CD pipeline (deploy to K8s)
+├── k8s/
+│   ├── deployment.yaml     # Pod deployment
+│   └── service.yaml        # NodePort service
 ├── src/
 │   ├── api/                # FastAPI application
 │   ├── db/                 # Database models & connection
