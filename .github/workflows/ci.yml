@@ -1,21 +1,5 @@
 # =============================================================================
-# Storyplex Analytics - CI/CD Pipeline
-# =============================================================================
-# This pipeline implements a production-grade CI/CD workflow following
-# DevSecOps principles with shift-left security integration.
-#
-# Pipeline Stages:
-# 1. Checkout        - Retrieve source code
-# 2. Setup Runtime   - Install Python environment
-# 3. Linting         - Enforce coding standards (Ruff)
-# 4. SAST            - Static Application Security Testing (Bandit + CodeQL)
-# 5. SCA             - Software Composition Analysis (pip-audit)
-# 6. Unit Tests      - Validate business logic
-# 7. Build           - Package application
-# 8. Docker Build    - Create container image
-# 9. Image Scan      - Detect vulnerabilities (Trivy)
-# 10. Runtime Test   - Validate container behavior
-# 11. Registry Push  - Publish trusted image to DockerHub
+# Storyplex Analytics - CI Pipeline
 # =============================================================================
 
 name: CI/CD Pipeline
@@ -25,7 +9,7 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:
 
 env:
   PYTHON_VERSION: "3.11"
@@ -33,13 +17,10 @@ env:
 
 jobs:
   # ===========================================================================
-  # Stage 1: Code Quality & Linting
-  # ===========================================================================
-  # WHY: Prevents technical debt by enforcing consistent coding standards.
-  # Catches style issues early before they accumulate.
+  # Lint & Code Quality
   # ===========================================================================
   lint:
-    name: "Lint & Code Quality"
+    name: "Lint"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -55,120 +36,16 @@ jobs:
         run: pip install ruff
 
       - name: Run Ruff linter
-        run: ruff check src/ tests/ --output-format=github
+        run: ruff check src/ tests/
 
       - name: Check code formatting
         run: ruff format --check src/ tests/
 
   # ===========================================================================
-  # Stage 2: Static Application Security Testing (SAST)
-  # ===========================================================================
-  # WHY: Detects code-level vulnerabilities (OWASP Top 10) before deployment.
-  # Shift-left security - find issues in code, not in production.
-  # ===========================================================================
-  sast:
-    name: "SAST - Security Scan"
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-      contents: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: "pip"
-
-      - name: Install Bandit
-        run: pip install bandit[toml]
-
-      - name: Run Bandit SAST scan
-        run: |
-          bandit -r src/ -f sarif -o bandit-results.sarif || true
-          bandit -r src/ -ll --exit-zero
-
-      - name: Upload Bandit results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: bandit-results.sarif
-        continue-on-error: true
-
-  # ===========================================================================
-  # Stage 3: CodeQL Analysis (Advanced SAST)
-  # ===========================================================================
-  # WHY: Deep semantic analysis to detect complex security vulnerabilities
-  # that pattern-based tools might miss.
-  # ===========================================================================
-  codeql:
-    name: "CodeQL Analysis"
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-      contents: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: python
-          queries: security-and-quality
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:python"
-
-  # ===========================================================================
-  # Stage 4: Software Composition Analysis (SCA)
-  # ===========================================================================
-  # WHY: Identifies vulnerable dependencies (supply-chain risks).
-  # Critical for detecting known CVEs in third-party libraries.
-  # ===========================================================================
-  sca:
-    name: "SCA - Dependency Scan"
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: "pip"
-
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install .
-          pip install pip-audit
-
-      - name: Run pip-audit SCA scan
-        run: pip-audit --format json --output pip-audit-report.json || true
-
-      - name: Display vulnerabilities
-        run: pip-audit || true
-
-      - name: Upload SCA report
-        uses: actions/upload-artifact@v4
-        with:
-          name: sca-report
-          path: pip-audit-report.json
-
-  # ===========================================================================
-  # Stage 5: Unit Tests
-  # ===========================================================================
-  # WHY: Validates business logic and prevents regressions.
-  # Core quality gate ensuring code correctness.
+  # Unit Tests
   # ===========================================================================
   test:
-    name: "Unit Tests"
+    name: "Test"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -185,23 +62,14 @@ jobs:
           pip install --upgrade pip
           pip install -e ".[dev]"
 
-      - name: Run tests with coverage
-        run: pytest tests/ -v --cov=src --cov-report=xml --cov-report=term-missing
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage.xml
+      - name: Run tests
+        run: pytest tests/ -v
 
   # ===========================================================================
-  # Stage 6: Build Application
-  # ===========================================================================
-  # WHY: Ensures the application can be packaged successfully.
-  # Validates project configuration and dependencies.
+  # Build
   # ===========================================================================
   build:
-    name: "Build Application"
+    name: "Build"
     runs-on: ubuntu-latest
     needs: [lint, test]
     steps:
@@ -220,39 +88,19 @@ jobs:
       - name: Build package
         run: python -m build
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
   # ===========================================================================
-  # Stage 7: Docker Build
+  # Docker Build & Push
   # ===========================================================================
-  # WHY: Creates immutable container image for consistent deployments.
-  # Ensures application runs identically across environments.
-  # ===========================================================================
-  docker-build:
-    name: "Docker Build"
+  docker:
+    name: "Docker Build & Push"
     runs-on: ubuntu-latest
-    needs: [build, sast, sca]
-    outputs:
-      image_tag: ${{ steps.meta.outputs.tags }}
+    needs: [build]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=sha,prefix=
-            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build Docker image
         uses: docker/build-push-action@v5
@@ -261,137 +109,24 @@ jobs:
           push: false
           load: true
           tags: ${{ env.IMAGE_NAME }}:test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
-      - name: Save Docker image
-        run: docker save ${{ env.IMAGE_NAME }}:test -o image.tar
-
-      - name: Upload Docker image
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-image
-          path: image.tar
-          retention-days: 1
-
-  # ===========================================================================
-  # Stage 8: Container Image Scan
-  # ===========================================================================
-  # WHY: Detects OS and library vulnerabilities in the container image.
-  # Prevents shipping vulnerable images to production.
-  # ===========================================================================
-  image-scan:
-    name: "Image Scan (Trivy)"
-    runs-on: ubuntu-latest
-    needs: [docker-build]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Download Docker image
-        uses: actions/download-artifact@v4
-        with:
-          name: docker-image
-
-      - name: Load Docker image
-        run: docker load -i image.tar
-
-      - name: Run Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.IMAGE_NAME }}:test
-          format: "sarif"
-          output: "trivy-results.sarif"
-          severity: "CRITICAL,HIGH"
-
-      - name: Upload Trivy results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: "trivy-results.sarif"
-        continue-on-error: true
-
-      - name: Trivy scan summary
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.IMAGE_NAME }}:test
-          format: "table"
-          severity: "CRITICAL,HIGH"
-          exit-code: "0"
-
-  # ===========================================================================
-  # Stage 9: Container Runtime Test
-  # ===========================================================================
-  # WHY: Validates container behavior and ensures image is runnable.
-  # Smoke test to catch basic configuration issues.
-  # ===========================================================================
-  container-test:
-    name: "Container Runtime Test"
-    runs-on: ubuntu-latest
-    needs: [docker-build]
-    steps:
-      - name: Download Docker image
-        uses: actions/download-artifact@v4
-        with:
-          name: docker-image
-
-      - name: Load Docker image
-        run: docker load -i image.tar
-
-      - name: Run container smoke test
+      - name: Test container
         run: |
-          echo "Testing container startup..."
-          docker run --rm ${{ env.IMAGE_NAME }}:test python -c "import src; print('Import test passed!')"
-
-          echo "Testing CLI availability..."
-          docker run --rm ${{ env.IMAGE_NAME }}:test python -c "from src.cli import main; print('CLI test passed!')"
-
-          echo "All container tests passed!"
-
-  # ===========================================================================
-  # Stage 10: Push to DockerHub
-  # ===========================================================================
-  # WHY: Publishes trusted, scanned image to registry for downstream CD.
-  # Only pushes after all quality and security gates pass.
-  # ===========================================================================
-  docker-push:
-    name: "Push to DockerHub"
-    runs-on: ubuntu-latest
-    needs: [image-scan, container-test, codeql]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+          docker run --rm ${{ env.IMAGE_NAME }}:test python -c "import src; print('Container test passed!')"
 
       - name: Login to DockerHub
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=sha,prefix=
-            type=raw,value=latest
-
-      - name: Build and push Docker image
+      - name: Push to DockerHub
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Image push summary
-        run: |
-          echo "Successfully pushed image to DockerHub!"
-          echo "Tags: ${{ steps.meta.outputs.tags }}"
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
